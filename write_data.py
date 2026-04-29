@@ -5,18 +5,18 @@ import pickle
 import pandas as pd
 import h5py
 from ThreeDGiGEarth.common import h5_to_dict
+from pathlib import Path
+#PROJECT_ROOT =  pathlib.Path(__file__).resolve().parents[1]
 
-PROJECT_ROOT =  pathlib.Path(__file__).resolve().parents[1]
-
-data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','83ft'),('24kHz','43ft'),('48kHz','43ft'),('96kHz','43ft')]#data_index = [('24kHz','83ft'), ('96kHz','43ft')]
-#data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','43ft'),('48kHz','43ft')]
-#data_index = [('12kHz','83ft'),('24kHz','83ft'),('96kHz','43ft')]
-#data_index = [('24kHz','83ft'),('96kHz','43ft')]
+data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','83ft'),('24kHz','43ft'),('48kHz','43ft'),('96kHz','43ft')]
 
 datatyp = 'Bfield'
 
-REFERENCE_MODEL = PROJECT_ROOT / 'inversion' / 'data' / 'Benchmark-3' / 'globalmodel.h5'
-BENCHMARK_ROOT = PROJECT_ROOT / 'inversion-NN' / 'data' / 'Benchmark-3'
+BENCHMARK_ROOT = '/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3/'
+REFERENCE_MODEL = '/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3/globalmodel.h5'
+
+#REFERENCE_MODEL = PROJECT_ROOT / 'inversion' / 'data' / 'Benchmark-3' / 'globalmodel.h5'
+#BENCHMARK_ROOT = PROJECT_ROOT / 'inversion-NN' / 'data' / 'Benchmark-3'
 
 with h5py.File(REFERENCE_MODEL, 'r') as f:
     ref_model = h5_to_dict(f)
@@ -37,9 +37,37 @@ writer5 = csv.writer(l)
 # build a pandas dataframe with the data.
 # The tvd is the index and the tuple (freq,dist) is the columns
 
+abs_frac = 0.025
+ampl_fac = 1e10
+min_floor = 1e-12
+
 
 data = {}
 var = {}
+all_rows = []
+for di in data_index:
+    freq, dist = di
+    p = Path(f'{BENCHMARK_ROOT}/logdata/{datatyp}_{dist}_{freq}.las')
+    if not p.exists():
+        continue
+    with p.open('r') as f:
+        lines = f.readlines()[1:]
+        for el in lines:
+            vals = np.array(el.strip().split()[1:], dtype=np.float32)
+            all_rows.append(vals)
+
+if not all_rows:
+    raise RuntimeError("No data found to compute global variances")
+all_array = np.vstack(all_rows)            # shape (total_rows, n_meas)
+global_means = np.mean(np.abs(all_array), axis=0)   # shape (n_meas,)
+global_minimums = np.min(np.abs(all_array), axis=0)   # shape (n_meas,)
+abs_err_per_meas = np.maximum(abs_frac * global_means, min_floor)
+abs_err = np.min(global_minimums)*ampl_fac
+global_var_per_meas = (abs_err_per_meas) ** 2
+global_var_list = list(global_var_per_meas)
+
+
+
 for di in data_index:
     freq, dist = di
     try:
@@ -51,9 +79,13 @@ for di in data_index:
             # Convert to array for proper mean calculation across all lines
             values_array = np.array(values)  # shape (n_lines, 8)
             measurement_means = np.mean(np.abs(values_array), axis=0)  # shape (8,) - mean over all lines for each data_order element
-            # Variance as (2.5% of mean)^2 for each measurement type
-            var[(freq, dist)] = [['ABS'] + [[(0.025*measurement_means[idx])**2 for idx, el in enumerate(val)]] for val in values]
-            
+            # Strategy 1: mean over all assim steps: Variance as (2.5% of mean)^2 for each measurement type
+            #var[(freq, dist)] = [['ABS'] + [[(0.025*measurement_means[idx])**2 for idx, el in enumerate(val)]] for val in values]
+            # Strategy 2: relative error: Variance as (2.5% of el)^2 for each measurement
+            #var[(freq, dist)] = [['ABS'] + [[(0.025 * el) ** 2 for el in val] for val in values]]
+            # Strategy 3: absolute error:
+            var[(freq, dist)] = [['ABS'] + [[(abs_err) ** 2 for el in val] for val in values]]
+
     except:
         data[(freq, dist)] = None
         var[(freq,dist)] = None
