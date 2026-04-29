@@ -6,17 +6,17 @@ import pandas as pd
 import h5py
 from ThreeDGiGEarth.common import h5_to_dict
 
-PROJECT_ROOT =  pathlib.Path(__file__).resolve().parents[1]
+#PROJECT_ROOT =  pathlib.Path(__file__).resolve().parents[1]
 
-data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','83ft'),('24kHz','43ft'),('48kHz','43ft'),('96kHz','43ft')]#data_index = [('24kHz','83ft'), ('96kHz','43ft')]
-#data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','43ft'),('48kHz','43ft')]
-#data_index = [('12kHz','83ft'),('24kHz','83ft'),('96kHz','43ft')]
-#data_index = [('24kHz','83ft'),('96kHz','43ft')]
+data_index = [('6kHz','83ft'),('12kHz','83ft'),('24kHz','83ft'),('24kHz','43ft'),('48kHz','43ft'),('96kHz','43ft')]
 
 datatyp = 'Bfield'
 
-REFERENCE_MODEL = PROJECT_ROOT / 'inversion' / 'data' / 'Benchmark-3' / 'globalmodel.h5'
-BENCHMARK_ROOT = PROJECT_ROOT / 'inversion-NN' / 'data' / 'Benchmark-3'
+BENCHMARK_ROOT = '/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3/'
+REFERENCE_MODEL = '/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3/globalmodel.h5'
+
+#REFERENCE_MODEL = PROJECT_ROOT / 'inversion' / 'data' / 'Benchmark-3' / 'globalmodel.h5'
+#BENCHMARK_ROOT = PROJECT_ROOT / 'inversion-NN' / 'data' / 'Benchmark-3'
 
 with h5py.File(REFERENCE_MODEL, 'r') as f:
     ref_model = h5_to_dict(f)
