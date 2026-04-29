@@ -618,11 +618,12 @@ def map_update_data_space_LM(theta, f_theta, theta_mean, J, y, Cd_diag, C_theta,
 
 
 
-reference_model_path = '/home/AD.NORCERESEARCH.NO/krfo/CodeProjects/DISTINGUISH/Jacobian/inversion/data/Benchmark-3/globalmodel.h5'
+#reference_model_path = '/home/AD.NORCERESEARCH.NO/krfo/CodeProjects/DISTINGUISH/Jacobian/inversion/data/Benchmark-3/globalmodel.h5'
+reference_model_path = '/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3/globalmodel.h5'
 Ne = 250
 #pr, c_theta, mean_theta = sample_prior(Ne)
 pr, c_theta, mean_theta = sample_prior_0D(Ne)
-setup_simulators(reference_model_path='/home/AD.NORCERESEARCH.NO/krfo/CodeProjects/DISTINGUISH/Jacobian/inversion/data/Benchmark-3', data_type='Bfield')
+setup_simulators(reference_model_path='/home/AD.NORCERESEARCH.NO/mlie/3DGiG/Jacobian/inversion/data/Benchmark-3', data_type='Bfield')
 
 # Load reference model for plotting
 with h5py.File(reference_model_path, "r") as f:
